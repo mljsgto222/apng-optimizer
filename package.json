@@ -1,0 +1,16 @@
+{
+  "name": "apng-optimizer",
+  "version": "1.0.0",
+  "description": "Optimizes APNG animations for js",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "apng",
+    "optimizer",
+    "APNGOpt"
+  ],
+  "author": "zhengz",
+  "license": "ISC"
+}
