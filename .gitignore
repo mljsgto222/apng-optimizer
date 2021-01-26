@@ -21,3 +21,4 @@ snapshots.js
 .DS_Store
 node_modules
 /dist
+.yarnrc

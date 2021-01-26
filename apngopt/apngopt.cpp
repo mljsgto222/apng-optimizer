@@ -38,6 +38,9 @@ extern "C" {
 #include "zopfli.h"
 }
 
+#ifndef APNGOPT
+#define APNGOPT
+
 #define notabc(c) ((c) < 65 || (c) > 122 || ((c) > 90 && (c) < 97))
 
 #define id_IHDR 0x52444849
@@ -1515,3 +1518,4 @@ int main(int argc, char** argv)
 
   return 0;
 }
+#endif
