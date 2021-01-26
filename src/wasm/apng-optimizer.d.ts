@@ -2,6 +2,8 @@
 export interface Options {
     deflate_method: number;
     iter: number;
+    min_quality: number;
+    max_quality: number;
 }
 
 export interface ReadFileOptions {

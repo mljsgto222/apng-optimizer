@@ -1,12 +1,22 @@
+import { DeflateMethod } from './enum/deflate-method';
 import Module, { APNGOptimizerModule, Options } from './wasm/apng-optimizer';
-
-const defaultOptions: Options = {
-    deflate_method: 1,
-    iter: 15
-};
 
 const IN_FILE_PATH = '/in.png';
 const OUT_FILE_PATH = '/out.png';
+
+export interface OptimizerOptions {
+    deflateMethod?: DeflateMethod;
+    iter?: number;
+    minQuality?: number;
+    maxQuality?: number;
+}
+
+const defaultOptions: OptimizerOptions = {
+    deflateMethod: DeflateMethod.SevenZip,
+    iter: 15,
+    minQuality: 0,
+    maxQuality: 100
+}
 
 export class APNGOptimizer {
     private modulePath: string;
@@ -30,13 +40,19 @@ export class APNGOptimizer {
         return this.readyPromise;
     }
 
-    async optAPNG(url: string): Promise<Uint8Array> {
-        const apngFile = await (await fetch(url)).arrayBuffer();
-        this.module.FS.writeFile(IN_FILE_PATH, new Uint8Array(apngFile));
-        const res = this.module.optAPNG(IN_FILE_PATH, OUT_FILE_PATH, defaultOptions);
+    async optAPNG(apngBuffer: ArrayBuffer, options?: OptimizerOptions): Promise<Uint8Array> {
+        const _options = Object.assign({}, defaultOptions, options) as Required<OptimizerOptions>;
+
+        this.module.FS.writeFile(IN_FILE_PATH, new Uint8Array(apngBuffer));
+        const res = this.module.optAPNG(IN_FILE_PATH, OUT_FILE_PATH, {
+            deflate_method: _options.deflateMethod,
+            iter: _options.iter,
+            min_quality: _options.minQuality,
+            max_quality: _options.maxQuality
+        });
         this.module.FS.unlink(IN_FILE_PATH);
         if(res < 0) {
-            throw new Error(`opt APNG failed: ${url}`);
+            throw new Error(`opt APNG failed`);
         }
 
         const optAPNG = this.module.FS.readFile(OUT_FILE_PATH, { encoding: 'binary' }) as Uint8Array;

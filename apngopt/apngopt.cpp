@@ -223,8 +223,6 @@ int load_apng(const char * szIn, std::vector<APNGFrame>& frames, unsigned int & 
   int res = -1;
   first = 0;
 
-  printf("Reading '%s'...\n", szIn);
-
   if ((f = fopen(szIn, "rb")) != 0)
   {
     if (fread(sig, 1, 8, f) == 8 && png_sig_cmp(sig, 0, 8) == 0)
@@ -728,12 +726,13 @@ void optim_downconvert(std::vector<APNGFrame>& frames, unsigned int & coltype)
   }
 }
 
-void optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype) {
+int optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype, int minQuality, int maxQuality) {
     unsigned int size = frames.size();
     unsigned int width = frames[0].w;
     unsigned int height = frames[0].h;
     unsigned int imageSize = width * height * 4;
     liq_attr *attr = liq_attr_create();
+    liq_set_quality(attr, minQuality, maxQuality);
     liq_histogram *hist = liq_histogram_create(attr);
     unsigned char* pixels[size];
     liq_image* images[size];
@@ -751,7 +750,8 @@ void optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype) {
 
     liq_result *res;
     coltype = 3;
-    if(liq_histogram_quantize(hist, attr, &res) == LIQ_OK) {
+    int errorCode = liq_histogram_quantize(hist, attr, &res);
+    if(errorCode == LIQ_OK) {
         liq_set_dithering_level(res, 1.0);
         for(int i = 0; i < size; i++) {
             liq_write_remapped_image(res, images[i], frames[i].p, imageSize);
@@ -760,7 +760,6 @@ void optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype) {
         palsize = liqPalette->count;
         for (size_t i = 0; i < liqPalette->count; i++)
         {
-            printf("rgba: %d %d %d\n", liqPalette->entries[i].r, liqPalette->entries[i].g, liqPalette->entries[i].b);
             palette[i].r = liqPalette->entries[i].r;
             palette[i].g = liqPalette->entries[i].g;
             palette[i].b = liqPalette->entries[i].b;
@@ -768,9 +767,6 @@ void optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype) {
             if (trns[i] != 255) trnssize = i+1;
         }
         
-    }
-    else {
-        printf("Quantization failed\n");
     }
 
     for(int i = 0; i < size; i++) {
@@ -780,6 +776,7 @@ void optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype) {
     liq_result_destroy(res);
     liq_attr_destroy(attr);
     liq_histogram_destroy(hist);
+    return errorCode;
 }
 
 void write_chunk(FILE * f, const char * name, unsigned char * data, unsigned int length)
@@ -1331,7 +1328,7 @@ int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int f
     bop = 0;
     next_seq_num = 0;
 
-    printf("saving %s (frame %d of %d)\n", szOut, 1-first, num_frames-first);
+    // printf("saving %s (frame %d of %d)\n", szOut, 1-first, num_frames-first);
     for (j=0; j<6; j++)
       op[j].valid = 0;
     deflate_rect_op(frames[0].p, x0, y0, w0, h0, bpp, rowbytes, zbuf_size, 0);
@@ -1341,7 +1338,7 @@ int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int f
     {
       write_IDATs(f, 0, zbuf, zsize, idat_size);
 
-      printf("saving %s (frame %d of %d)\n", szOut, 1, num_frames-first);
+    //   printf("saving %s (frame %d of %d)\n", szOut, 1, num_frames-first);
       for (j=0; j<6; j++)
         op[j].valid = 0;
       deflate_rect_op(frames[1].p, x0, y0, w0, h0, bpp, rowbytes, zbuf_size, 0);
@@ -1353,7 +1350,7 @@ int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int f
       unsigned int op_min;
       int          op_best;
 
-      printf("saving %s (frame %d of %d)\n", szOut, i-first+2, num_frames-first);
+    //   printf("saving %s (frame %d of %d)\n", szOut, i-first+2, num_frames-first);
       for (j=0; j<6; j++)
         op[j].valid = 0;
 
@@ -1464,7 +1461,7 @@ int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int f
   }
   else
   {
-    printf( "Error: couldn't open file for writing\n" );
+    // printf( "Error: couldn't open file for writing\n" );
     return 1;
   }
 
