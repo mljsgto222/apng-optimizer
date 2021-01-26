@@ -34,12 +34,12 @@
 #include "png.h"     /* original (unpatched) libpng is ok */
 #include "zlib.h"
 #include "7z.h"
+#include "libimagequant.h"
 extern "C" {
 #include "zopfli.h"
 }
 
-#ifndef APNGOPT
-#define APNGOPT
+
 
 #define notabc(c) ((c) < 65 || (c) > 122 || ((c) > 90 && (c) < 97))
 
@@ -204,7 +204,7 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr)
   return 0;
 }
 
-int load_apng(char * szIn, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops)
+int load_apng(const char * szIn, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops)
 {
   FILE * f;
   unsigned int id, i, j, w, h, w0, h0, x0, y0;
@@ -728,6 +728,60 @@ void optim_downconvert(std::vector<APNGFrame>& frames, unsigned int & coltype)
   }
 }
 
+void optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype) {
+    unsigned int size = frames.size();
+    unsigned int width = frames[0].w;
+    unsigned int height = frames[0].h;
+    unsigned int imageSize = width * height * 4;
+    liq_attr *attr = liq_attr_create();
+    liq_histogram *hist = liq_histogram_create(attr);
+    unsigned char* pixels[size];
+    liq_image* images[size];
+
+    for(int i = 0; i < size; i++) {
+        unsigned char *raw_rgba_pixels = (unsigned char *)malloc(imageSize);
+        memcpy(raw_rgba_pixels, frames[i].p, imageSize);
+
+        liq_image *image = liq_image_create_rgba(attr, raw_rgba_pixels, width, height, 0);
+        liq_histogram_add_image(hist, attr, image);
+        
+        pixels[i] = raw_rgba_pixels;
+        images[i] = image;
+    }
+
+    liq_result *res;
+    coltype = 3;
+    if(liq_histogram_quantize(hist, attr, &res) == LIQ_OK) {
+        liq_set_dithering_level(res, 1.0);
+        for(int i = 0; i < size; i++) {
+            liq_write_remapped_image(res, images[i], frames[i].p, imageSize);
+        }
+        const liq_palette *liqPalette = liq_get_palette(res);
+        palsize = liqPalette->count;
+        for (size_t i = 0; i < liqPalette->count; i++)
+        {
+            printf("rgba: %d %d %d\n", liqPalette->entries[i].r, liqPalette->entries[i].g, liqPalette->entries[i].b);
+            palette[i].r = liqPalette->entries[i].r;
+            palette[i].g = liqPalette->entries[i].g;
+            palette[i].b = liqPalette->entries[i].b;
+            trns[i] = liqPalette->entries[i].a;
+            if (trns[i] != 255) trnssize = i+1;
+        }
+        
+    }
+    else {
+        printf("Quantization failed\n");
+    }
+
+    for(int i = 0; i < size; i++) {
+        delete[] pixels[i];
+        liq_image_destroy(images[i]);
+    }
+    liq_result_destroy(res);
+    liq_attr_destroy(attr);
+    liq_histogram_destroy(hist);
+}
+
 void write_chunk(FILE * f, const char * name, unsigned char * data, unsigned int length)
 {
   unsigned char buf[4];
@@ -1164,7 +1218,7 @@ void get_rect(unsigned int w, unsigned int h, unsigned char *pimage1, unsigned c
     deflate_rect_op(ptemp, x0, y0, w0, h0, bpp, stride, zbuf_size, n*2+1);
 }
 
-int save_apng(char * szOut, std::vector<APNGFrame>& frames, unsigned int first, unsigned int loops, unsigned int coltype, int deflate_method, int iter)
+int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int first, unsigned int loops, unsigned int coltype, int deflate_method, int iter)
 {
   FILE * f;
   unsigned int i, j, k;
@@ -1424,98 +1478,3 @@ int save_apng(char * szOut, std::vector<APNGFrame>& frames, unsigned int first, 
   return 0;
 }
 /* APNG encoder - end */
-
-int main(int argc, char** argv)
-{
-  char   szInput[256];
-  char   szOut[256];
-  char * szOpt;
-  char * szExt;
-  std::vector<APNGFrame> frames;
-  unsigned int first, loops, coltype;
-  int    deflate_method = 1;
-  int    iter = 15;
-
-  printf("\nAPNG Optimizer 1.4");
-
-  if (argc <= 1)
-  {
-    printf("\n\nUsage: apngopt [options] anim.png [anim_opt.png]\n\n"
-           "-z0  : zlib compression\n"
-           "-z1  : 7zip compression (default)\n"
-           "-z2  : zopfli compression\n"
-           "-i## : number of iterations, default -i%d\n", iter);
-    return 1;
-  }
-
-  szInput[0] = 0;
-  szOut[0] = 0;
-
-  for (int i=1; i<argc; i++)
-  {
-    szOpt = argv[i];
-
-    if (szOpt[0] == '/' || szOpt[0] == '-')
-    {
-      if (szOpt[1] == 'z' || szOpt[1] == 'Z')
-      {
-        if (szOpt[2] == '0')
-          deflate_method = 0;
-        if (szOpt[2] == '1')
-          deflate_method = 1;
-        if (szOpt[2] == '2')
-          deflate_method = 2;
-      }
-      if (szOpt[1] == 'i' || szOpt[1] == 'I')
-      {
-        iter = atoi(szOpt+2);
-        if (iter < 1) iter = 1;
-      }
-    }
-    else
-    if (szInput[0] == 0)
-      strcpy(szInput, szOpt);
-    else
-    if (szOut[0] == 0)
-      strcpy(szOut, szOpt);
-  }
-
-  if (deflate_method == 0)
-    printf(" using ZLIB\n\n");
-  else if (deflate_method == 1)
-    printf(" using 7ZIP with %d iterations\n\n", iter);
-  else if (deflate_method == 2)
-    printf(" using ZOPFLI with %d iterations\n\n", iter);
-
-  if (szOut[0] == 0)
-  {
-    strcpy(szOut, szInput);
-    if ((szExt = strrchr(szOut, '.')) != NULL) *szExt = 0;
-    strcat(szOut, "_opt.png");
-  }
-
-  int res = load_apng(szInput, frames, first, loops);
-  if (res < 0)
-  {
-    printf("load_apng() failed: '%s'\n", szInput);
-    return 1;
-  }
-
-  optim_dirty(frames);
-  optim_duplicates(frames, first);
-  optim_downconvert(frames, coltype);
-
-  save_apng(szOut, frames, first, loops, coltype, deflate_method, iter);
-
-  for (size_t j=0; j<frames.size(); j++)
-  {
-    delete[] frames[j].rows;
-    delete[] frames[j].p;
-  }
-  frames.clear();
-
-  printf("all done\n");
-
-  return 0;
-}
-#endif

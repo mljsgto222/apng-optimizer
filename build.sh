@@ -2,12 +2,12 @@
 
 set -e
 
-export OPTIMIZE="-O0"
+export OPTIMIZE="-O3 -pedantic"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
 
-NAME="apng-optimizer"
+NAME="APNGOptimizerModule"
 
 echo "============================================="
 echo "Start build APNG Optizmizer"
@@ -17,13 +17,14 @@ echo "============================================="
   --bind \
   ${OPTIMIZE} \
   -flto \
-  --closure=0 \
+  --closure=1 \
+  --post-js ./em-post.js \
   -s WASM=1 \
   -s ASSERTIONS=0 \
   -s ALLOW_MEMORY_GROWTH=1 \
   -s SAFE_HEAP=0 \
   -s ENVIRONMENT=web,worker \
-  -s EXTRA_EXPORTED_RUNTIME_METHODS='["FS", "GL"]' \
+  -s EXTRA_EXPORTED_RUNTIME_METHODS='["FS"]' \
   -s MODULARIZE=1 \
   -s EXPORT_ES6=1 \
   -s EXPORT_NAME=${NAME} \
@@ -32,15 +33,14 @@ echo "============================================="
   -I ./apngopt/libpng \
   -I ./apngopt/zlib \
   -I ./apngopt/zopfli \
-  -I ../source/context \
-  -I ../source/shape \
-  -o ./src/wasm/${NAME}.js \
+  -I ./imagequant \
+  -o ./src/wasm/apng-optimizer.js \
   ./binding.cpp \
   ./apngopt/7z/*.cc \
-  ./apngopt/*.cpp \
   ./apngopt/libpng/*.c \
   ./apngopt/zlib/*.c \
   ./apngopt/zopfli/*.c \
+  ./imagequant/*.c \
 )
 
 echo "============================================="

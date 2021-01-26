@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>APNG Optimizer</title>
+        <style>
+            .container {
+                display:  flex;
+            }
+
+            .container__item {
+                width: 500px;
+                position: relative;
+                margin-right: 6px;
+            }
+
+            .container__item__label {
+                position: absolute;
+                left: 0;
+                top: 0;
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+
+            .container__item__size {
+                margin-top: 12px;
+                font-size: 14px;
+            }
+
+            .container__item__image {
+                width: 100%;
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="container__item">
+                <img id="originImage"  class="container__item__image">
+                <div class="container__item__label">原图</div>
+                <div class="container__item__size" id="originSize"></div>
+            </div>
+            <div class="container__item">
+                <img id="optImage"  class="container__item__image">
+                <div class="container__item__label">结果图</div>
+                <div class="container__item__size" id="optSize"></div>
+                <div class="container__item__size" id="optTime"></div>
+            </div>
+        </div>
+    </body>
+</html>
