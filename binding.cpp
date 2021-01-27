@@ -4,7 +4,7 @@
 #include <emscripten/html5.h>
 #include <emscripten/wire.h>
 #include <emscripten/bind.h>
-#include "apngopt/apngopt.cpp"
+#include "apngopt.hpp"
 
 using namespace emscripten;
 
@@ -13,22 +13,29 @@ struct Options {
     int iter = 15;
     int min_quality = 0;
     int max_quality = 100;
+    bool disabled_quant = false;
 };
 
 int main() { }
 
 int optAPNG(std::string szInput, std::string szOut, Options options) {
     unsigned int first, loops, coltype;
+    std::shared_ptr<APNGOpt> apngOpt = std::make_shared<APNGOpt>();
     std::vector<APNGFrame> frames;
 
-    int res = load_apng(szInput.c_str(), frames, first, loops);
+    int res = apngOpt->load_apng(szInput.c_str(), frames, first, loops);
     if (res >= 0)
     {
-        optim_dirty(frames);
-        optim_duplicates(frames, first);
-        optim_image(frames, coltype, options.min_quality, options.max_quality);
+        apngOpt->optim_dirty(frames);
+        apngOpt->optim_duplicates(frames, first);
+        if(!options.disabled_quant) {
+            apngOpt->optim_image(frames, coltype, options.min_quality, options.max_quality);
+        }
+        else {
+            apngOpt->optim_downconvert(frames, coltype);
+        }
 
-        save_apng(szOut.c_str(), frames, first, loops, coltype, options.deflate_method, options.iter);
+        apngOpt->save_apng(szOut.c_str(), frames, first, loops, coltype, options.deflate_method, options.iter);
     }
 
     for (size_t j = 0; j < frames.size(); j++)
@@ -48,6 +55,7 @@ EMSCRIPTEN_BINDINGS(apng_optimizer_module) {
         .field("iter", &Options::iter)
         .field("min_quality", &Options::min_quality)
         .field("max_quality", &Options::max_quality)
+        .field("disabled_quant", &Options::disabled_quant)
         ;
 
 

@@ -48,7 +48,8 @@ export class APNGOptimizer {
             deflate_method: _options.deflateMethod,
             iter: _options.iter,
             min_quality: _options.minQuality,
-            max_quality: _options.maxQuality
+            max_quality: _options.maxQuality,
+            disabled_quant: false
         });
         this.module.FS.unlink(IN_FILE_PATH);
         if(res < 0) {

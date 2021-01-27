@@ -34,12 +34,14 @@ echo "============================================="
   -I ./apngopt/zlib \
   -I ./apngopt/zopfli \
   -I ./imagequant \
+  -I ./apngopt \
   -o ./src/wasm/apng-optimizer.js \
   ./binding.cpp \
   ./apngopt/7z/*.cc \
   ./apngopt/libpng/*.c \
   ./apngopt/zlib/*.c \
   ./apngopt/zopfli/*.c \
+  ./apngopt/*.cpp \
   ./imagequant/*.c \
 )
 

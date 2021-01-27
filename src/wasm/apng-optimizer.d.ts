@@ -4,6 +4,7 @@ export interface Options {
     iter: number;
     min_quality: number;
     max_quality: number;
+    disabled_quant: boolean;
 }
 
 export interface ReadFileOptions {

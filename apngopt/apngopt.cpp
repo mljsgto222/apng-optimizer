@@ -27,17 +27,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <vector>
-#include "png.h"     /* original (unpatched) libpng is ok */
-#include "zlib.h"
 #include "7z.h"
 #include "libimagequant.h"
 extern "C" {
 #include "zopfli.h"
 }
+#include "apngopt.hpp"
 
 
 
@@ -50,28 +45,9 @@ extern "C" {
 #define id_fdAT 0x54416466
 #define id_IEND 0x444E4549
 
-struct CHUNK { unsigned char * p; unsigned int size; };
-struct APNGFrame { unsigned char * p, ** rows; unsigned int w, h, delay_num, delay_den; };
-struct COLORS { unsigned int num; unsigned char r, g, b, a; };
-struct OP { unsigned char * p; unsigned int size; int x, y, w, h, valid, filters; };
-struct rgb { unsigned char r, g, b; };
-
-unsigned char * op_zbuf1;
-unsigned char * op_zbuf2;
-z_stream        op_zstream1;
-z_stream        op_zstream2;
-unsigned char * row_buf;
-unsigned char * sub_row;
-unsigned char * up_row;
-unsigned char * avg_row;
-unsigned char * paeth_row;
-OP              op[6];
-rgb             palette[256];
-unsigned char   trns[256];
-unsigned int    palsize, trnssize;
-unsigned int    next_seq_num;
-
 const unsigned long cMaxPNGSize = 1000000UL;
+
+
 
 /* APNG decoder - begin */
 void info_fn(png_structp png_ptr, png_infop info_ptr)
@@ -90,7 +66,32 @@ void row_fn(png_structp png_ptr, png_bytep new_row, png_uint_32 row_num, int pas
   png_progressive_combine_row(png_ptr, frame->rows[row_num], new_row);
 }
 
-void compose_frame(unsigned char ** rows_dst, unsigned char ** rows_src, unsigned char bop, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
+int cmp_colors( const void *arg1, const void *arg2 )
+{
+  if ( ((COLORS*)arg1)->a != ((COLORS*)arg2)->a )
+    return (int)(((COLORS*)arg1)->a) - (int)(((COLORS*)arg2)->a);
+
+  if ( ((COLORS*)arg1)->num != ((COLORS*)arg2)->num )
+    return (int)(((COLORS*)arg2)->num) - (int)(((COLORS*)arg1)->num);
+
+  if ( ((COLORS*)arg1)->r != ((COLORS*)arg2)->r )
+    return (int)(((COLORS*)arg1)->r) - (int)(((COLORS*)arg2)->r);
+
+  if ( ((COLORS*)arg1)->g != ((COLORS*)arg2)->g )
+    return (int)(((COLORS*)arg1)->g) - (int)(((COLORS*)arg2)->g);
+
+  return (int)(((COLORS*)arg1)->b) - (int)(((COLORS*)arg2)->b);
+}
+
+APNGOpt::APNGOpt(/* args */)
+{
+}
+
+APNGOpt::~APNGOpt()
+{
+}
+
+void APNGOpt::compose_frame(unsigned char ** rows_dst, unsigned char ** rows_src, unsigned char bop, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 {
   unsigned int  i, j;
   int u, v, al;
@@ -127,7 +128,7 @@ void compose_frame(unsigned char ** rows_dst, unsigned char ** rows_src, unsigne
   }
 }
 
-inline unsigned int read_chunk(FILE * f, CHUNK * pChunk)
+unsigned int APNGOpt::read_chunk(FILE * f, CHUNK * pChunk)
 {
   unsigned char len[4];
   pChunk->size = 0;
@@ -143,7 +144,7 @@ inline unsigned int read_chunk(FILE * f, CHUNK * pChunk)
   return 0;
 }
 
-int processing_start(png_structp & png_ptr, png_infop & info_ptr, void * frame_ptr, bool hasInfo, CHUNK & chunkIHDR, std::vector<CHUNK>& chunksInfo)
+int APNGOpt::processing_start(png_structp & png_ptr, png_infop & info_ptr, void * frame_ptr, bool hasInfo, CHUNK & chunkIHDR, std::vector<CHUNK>& chunksInfo)
 {
   unsigned char header[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
@@ -170,7 +171,7 @@ int processing_start(png_structp & png_ptr, png_infop & info_ptr, void * frame_p
   return 0;
 }
 
-int processing_data(png_structp png_ptr, png_infop info_ptr, unsigned char * p, unsigned int size)
+int APNGOpt::processing_data(png_structp png_ptr, png_infop info_ptr, unsigned char * p, unsigned int size)
 {
   if (!png_ptr || !info_ptr)
     return 1;
@@ -185,7 +186,7 @@ int processing_data(png_structp png_ptr, png_infop info_ptr, unsigned char * p, 
   return 0;
 }
 
-int processing_finish(png_structp png_ptr, png_infop info_ptr)
+int APNGOpt::processing_finish(png_structp png_ptr, png_infop info_ptr)
 {
   unsigned char footer[12] = {0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130};
 
@@ -204,7 +205,7 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr)
   return 0;
 }
 
-int load_apng(const char * szIn, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops)
+int APNGOpt::load_apng(const char * szIn, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops)
 {
   FILE * f;
   unsigned int id, i, j, w, h, w0, h0, x0, y0;
@@ -440,7 +441,7 @@ int load_apng(const char * szIn, std::vector<APNGFrame>& frames, unsigned int & 
 }
 /* APNG decoder - end */
 
-void optim_dirty(std::vector<APNGFrame>& frames)
+void APNGOpt::optim_dirty(std::vector<APNGFrame>& frames)
 {
   unsigned int i, j;
   unsigned char * sp;
@@ -455,7 +456,7 @@ void optim_dirty(std::vector<APNGFrame>& frames)
   }
 }
 
-void optim_duplicates(std::vector<APNGFrame>& frames, unsigned int first)
+void APNGOpt::optim_duplicates(std::vector<APNGFrame>& frames, unsigned int first)
 {
   unsigned int imagesize = frames[0].w * frames[0].h * 4;
   unsigned int i = first;
@@ -493,24 +494,8 @@ void optim_duplicates(std::vector<APNGFrame>& frames, unsigned int first)
 }
 
 /* APNG encoder - begin */
-int cmp_colors( const void *arg1, const void *arg2 )
-{
-  if ( ((COLORS*)arg1)->a != ((COLORS*)arg2)->a )
-    return (int)(((COLORS*)arg1)->a) - (int)(((COLORS*)arg2)->a);
 
-  if ( ((COLORS*)arg1)->num != ((COLORS*)arg2)->num )
-    return (int)(((COLORS*)arg2)->num) - (int)(((COLORS*)arg1)->num);
-
-  if ( ((COLORS*)arg1)->r != ((COLORS*)arg2)->r )
-    return (int)(((COLORS*)arg1)->r) - (int)(((COLORS*)arg2)->r);
-
-  if ( ((COLORS*)arg1)->g != ((COLORS*)arg2)->g )
-    return (int)(((COLORS*)arg1)->g) - (int)(((COLORS*)arg2)->g);
-
-  return (int)(((COLORS*)arg1)->b) - (int)(((COLORS*)arg2)->b);
-}
-
-void optim_downconvert(std::vector<APNGFrame>& frames, unsigned int & coltype)
+void APNGOpt::optim_downconvert(std::vector<APNGFrame>& frames, unsigned int & coltype)
 {
   unsigned int  i, j, k, r, g, b, a;
   unsigned char * sp, * dp;
@@ -726,7 +711,7 @@ void optim_downconvert(std::vector<APNGFrame>& frames, unsigned int & coltype)
   }
 }
 
-int optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype, int minQuality, int maxQuality) {
+void APNGOpt::optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype, int minQuality, int maxQuality) {
     unsigned int size = frames.size();
     unsigned int width = frames[0].w;
     unsigned int height = frames[0].h;
@@ -776,10 +761,9 @@ int optim_image(std::vector<APNGFrame>& frames, unsigned int & coltype, int minQ
     liq_result_destroy(res);
     liq_attr_destroy(attr);
     liq_histogram_destroy(hist);
-    return errorCode;
 }
 
-void write_chunk(FILE * f, const char * name, unsigned char * data, unsigned int length)
+void APNGOpt::write_chunk(FILE * f, const char * name, unsigned char * data, unsigned int length)
 {
   unsigned char buf[4];
   unsigned int crc = crc32(0, Z_NULL, 0);
@@ -807,7 +791,7 @@ void write_chunk(FILE * f, const char * name, unsigned char * data, unsigned int
   fwrite(buf, 1, 4, f);
 }
 
-void write_IDATs(FILE * f, int frame, unsigned char * data, unsigned int length, unsigned int idat_size)
+void APNGOpt::write_IDATs(FILE * f, int frame, unsigned char * data, unsigned int length, unsigned int idat_size)
 {
   unsigned int z_cmf = data[0];
   if ((z_cmf & 0x0f) == 8 && (z_cmf & 0xf0) <= 0x70)
@@ -847,7 +831,7 @@ void write_IDATs(FILE * f, int frame, unsigned char * data, unsigned int length,
   }
 }
 
-void process_rect(unsigned char * row, int rowbytes, int bpp, int stride, int h, unsigned char * rows)
+void APNGOpt::process_rect(unsigned char * row, int rowbytes, int bpp, int stride, int h, unsigned char * rows)
 {
   int i, j, v;
   int a, b, c, pa, pb, pc, p;
@@ -974,7 +958,7 @@ void process_rect(unsigned char * row, int rowbytes, int bpp, int stride, int h,
   }
 }
 
-void deflate_rect_fin(int deflate_method, int iter, unsigned char * zbuf, unsigned int * zsize, int bpp, int stride, unsigned char * rows, int zbuf_size, int n)
+void APNGOpt::deflate_rect_fin(int deflate_method, int iter, unsigned char * zbuf, unsigned int * zsize, int bpp, int stride, unsigned char * rows, int zbuf_size, int n)
 {
   unsigned char * row  = op[n].p + op[n].y*stride + op[n].x*bpp;
   int rowbytes = op[n].w*bpp;
@@ -1035,7 +1019,7 @@ void deflate_rect_fin(int deflate_method, int iter, unsigned char * zbuf, unsign
   }
 }
 
-void deflate_rect_op(unsigned char *pdata, int x, int y, int w, int h, int bpp, int stride, int zbuf_size, int n)
+void APNGOpt::deflate_rect_op(unsigned char *pdata, int x, int y, int w, int h, int bpp, int stride, int zbuf_size, int n)
 {
   unsigned char * row  = pdata + y*stride + x*bpp;
   int rowbytes = w * bpp;
@@ -1073,7 +1057,7 @@ void deflate_rect_op(unsigned char *pdata, int x, int y, int w, int h, int bpp, 
   deflateReset(&op_zstream2);
 }
 
-void get_rect(unsigned int w, unsigned int h, unsigned char *pimage1, unsigned char *pimage2, unsigned char *ptemp, unsigned int bpp, unsigned int stride, int zbuf_size, unsigned int has_tcolor, unsigned int tcolor, int n)
+void APNGOpt::get_rect(unsigned int w, unsigned int h, unsigned char *pimage1, unsigned char *pimage2, unsigned char *ptemp, unsigned int bpp, unsigned int stride, int zbuf_size, unsigned int has_tcolor, unsigned int tcolor, int n)
 {
   unsigned int   i, j, x0, y0, w0, h0;
   unsigned int   x_min = w-1;
@@ -1215,7 +1199,7 @@ void get_rect(unsigned int w, unsigned int h, unsigned char *pimage1, unsigned c
     deflate_rect_op(ptemp, x0, y0, w0, h0, bpp, stride, zbuf_size, n*2+1);
 }
 
-int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int first, unsigned int loops, unsigned int coltype, int deflate_method, int iter)
+int APNGOpt::save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int first, unsigned int loops, unsigned int coltype, int deflate_method, int iter)
 {
   FILE * f;
   unsigned int i, j, k;
