@@ -2,9 +2,10 @@
     "name": "apng-optimizer",
     "version": "1.0.0",
     "description": "Optimizes APNG animations for js",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
         "demo": "webpack serve --disable-host-check --host 0.0.0.0 --mode development",
+        "build": "rm -rf dist && tsc && cp -rf src/wasm dist/wasm",
         "build:wasm": "sh build.sh",
         "test": "test"
     },
@@ -12,6 +13,11 @@
         "apng",
         "optimizer",
         "APNGOpt"
+    ],
+    "files": [
+        "CHANGELOG.md",
+        "README.md",
+        "lib"
     ],
     "author": "zhengz",
     "license": "ISC",
