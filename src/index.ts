@@ -3,16 +3,17 @@ import Module, { APNGOptimizerModule, Options } from './wasm/apng-optimizer';
 
 
 export interface OptimizerOptions {
-    // 压缩方式
+    // compression method
     deflateMethod?: DeflateMethod;
-    // 重复压缩次数
+    // number of compression iterations 
     iter?: number;
-    // 最小质量
+    // min quality for imagequant
     minQuality?: number;
-    // 最大质量
+    // max quality for imagequant
     maxQuality?: number;
-    // 是否禁用 imagequant
+    // disable imagequant
     disabledQuant?: boolean;
+    // callback in process
     processCallback?: (progress: number) => void;
 }
 
@@ -43,16 +44,16 @@ export class APNGOptimizer {
     }
 
     /**
-     * 检查 optimizer 是否准备完成
+     * check optimizer is ready
      */
     checkReady() {
         return this.readyPromise;
     }
 
     /**
-     * 优化 apng 图片
-     * @param apngBuffer - apng 图片 buffer
-     * @param options - 优化配置
+     * optimize apng image
+     * @param apngBuffer - apng image buffer
+     * @param options - optimized options
      */
     async optAPNG(apngBuffer: Uint8Array, options?: OptimizerOptions): Promise<Uint8Array> {
         const { module } = this;
@@ -78,7 +79,6 @@ export class APNGOptimizer {
         }
         const optedBuffer = module.HEAPU8.subarray(res.bufferPtr, res.bufferPtr + res.size);
         const optAPNG = new Uint8Array(optedBuffer);
-        console.log(res.bufferPtr);
         module._free(res.bufferPtr);
 
         return optAPNG;

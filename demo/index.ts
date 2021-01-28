@@ -12,7 +12,6 @@ const optImage = document.getElementById('optImage') as HTMLImageElement;
 const optSize = document.getElementById('optSize')!;
 const optTime = document.getElementById('optTime')!;
 const optRate = document.getElementById('optRate')!;
-const progressDiv = document.getElementById('progressDiv')!;
 
 async function readOriginImage(url: string) {
     originImage.src = url;
