@@ -35,15 +35,18 @@ export class APNGOptimizerModule {
      */
     _free(ptr: number): void;
 
+    addFunction(callback: Function, signature: string): number;
+
+    removeFunction(callbackPtr: number): void;
 
     /**
      * 优化 apng 文件
      * @param pngBufferPtr - png 文件指针地址
      * @param pngBufferSize - png 文件大小
      * @param options - 优化参数
-     * @param callback - 进度回调
+     * @param callbackPtr - 进度回调函数指针
      */
-    optAPNG(pngBufferPtr: number, pngBufferSize: number, options: Options, callback: any): OptimizerResult;
+    optAPNG(pngBufferPtr: number, pngBufferSize: number, options: Options, callbackPtr: number): OptimizerResult;
 }
 
 interface IFantasyModule {

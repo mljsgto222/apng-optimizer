@@ -43,6 +43,9 @@ export class APNGOptimizer {
         const _options = Object.assign({}, defaultOptions, options) as Required<OptimizerOptions>;
         const pngBufferPtr = module._malloc(apngBuffer.byteLength);
         module.HEAPU8.set(apngBuffer, pngBufferPtr);
+        const funcPtr = module.addFunction((num: number) => {
+            console.log(num);
+        }, 'vf');
 
         const res = this.module.optAPNG(pngBufferPtr, apngBuffer.byteLength, {
             deflate_method: _options.deflateMethod,
@@ -50,8 +53,9 @@ export class APNGOptimizer {
             min_quality: _options.minQuality,
             max_quality: _options.maxQuality,
             disabled_quant: false
-        }, (d: any) => console.log(d));
+        }, funcPtr);
 
+        module.removeFunction(funcPtr);
         module._free(pngBufferPtr);
         if(res.size <= 0) {
             throw new Error(`opt APNG failed`);

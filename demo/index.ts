@@ -22,7 +22,7 @@ async function readOriginImage(url: string) {
 }
 
 function setOptImage(uint8Array: Uint8Array) {
-    const blob = new Blob([uint8Array.buffer]);
+    const blob = new Blob([uint8Array.buffer], { type: 'image/png' });
     const url = URL.createObjectURL(blob);
     optImage.src = url;
     optSize.innerText = `大小: ${Math.round(uint8Array.length / 1024 * 100000) / 100000}kb`;

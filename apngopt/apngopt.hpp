@@ -42,7 +42,7 @@ private:
 
     /* APNG encoder - end */
 public:
-    APNGOpt(/* args */);
+    APNGOpt(void (*callback)(float));
     ~APNGOpt();
 
     int load_apng(void * buffer, long size, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops);
@@ -60,6 +60,7 @@ public:
 
 
 private:
+    void (*process_callback)(float);
     unsigned char * op_zbuf1;
     unsigned char * op_zbuf2;
     z_stream        op_zstream1;

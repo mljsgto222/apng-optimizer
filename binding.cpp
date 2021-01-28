@@ -23,9 +23,9 @@ struct OptimizerResult {
 
 int main() { }
 
-OptimizerResult optAPNG(long pngBufferPtr, long size, Options options, emscripten::val callback) {
+OptimizerResult optAPNG(long pngBufferPtr, long size, Options options, long callbackPtr) {
     unsigned int first, loops, coltype;
-    std::shared_ptr<APNGOpt> apngOpt = std::make_shared<APNGOpt>();
+    std::shared_ptr<APNGOpt> apngOpt = std::make_shared<APNGOpt>(reinterpret_cast<void (*)(float)>(callbackPtr));
     std::vector<APNGFrame> frames;
     OptimizerResult result = OptimizerResult({ 0, 0 });
 

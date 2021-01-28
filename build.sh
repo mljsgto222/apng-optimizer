@@ -27,6 +27,8 @@ echo "============================================="
   -s EXPORT_ES6=1 \
   -s EXPORT_NAME=${NAME} \
   -s USE_ES6_IMPORT_META=0 \
+  -s EXTRA_EXPORTED_RUNTIME_METHODS='["addFunction", "removeFunction"]' \
+  -s RESERVED_FUNCTION_POINTERS=1 \
   -I ./apngopt/7z \
   -I ./apngopt/libpng \
   -I ./apngopt/zlib \
@@ -44,7 +46,7 @@ echo "============================================="
 )
 
 echo "============================================="
-echo "Compiling illusion module done"
+echo "Compiling APNG Optizmizer"
 echo "============================================="
 
 #-s ASYNCIFY \

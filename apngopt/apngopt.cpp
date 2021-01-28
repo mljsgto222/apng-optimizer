@@ -80,8 +80,9 @@ int cmp_colors(const void *arg1, const void *arg2)
     return (int)(((COLORS *)arg1)->b) - (int)(((COLORS *)arg2)->b);
 }
 
-APNGOpt::APNGOpt(/* args */)
+APNGOpt::APNGOpt(void (*callback)(float))
 {
+    process_callback = callback;
 }
 
 APNGOpt::~APNGOpt()
@@ -220,6 +221,7 @@ int APNGOpt::load_apng(void *buffer, long size, std::vector<APNGFrame> &frames, 
     int res = -1;
     first = 0;
 
+    process_callback(0);
     if ((f = fmemopen(buffer, size, "rb")) != 0)
     {
         if (fread(sig, 1, 8, f) == 8 && png_sig_cmp(sig, 0, 8) == 0)
@@ -442,6 +444,7 @@ void APNGOpt::optim_dirty(std::vector<APNGFrame> &frames)
         for (j = 0; j < size; j++, sp += 4)
             if (sp[3] == 0)
                 sp[0] = sp[1] = sp[2] = 0;
+        process_callback(0.1 + i / float(frames.size()) * 0.1);
     }
 }
 
@@ -479,6 +482,8 @@ void APNGOpt::optim_duplicates(std::vector<APNGFrame> &frames, unsigned int firs
             frames[i].delay_num /= num;
             frames[i].delay_den /= num;
         }
+
+        process_callback(0.2 + i / float(frames.size()) * 0.1);
     }
 }
 
@@ -562,6 +567,7 @@ void APNGOpt::optim_downconvert(std::vector<APNGFrame> &frames, unsigned int &co
                 }
             }
         }
+        process_callback(0.3 + i / float(num_frames) * 0.1);
     }
 
     if (grayscale && simple_trans && colors <= 256) /* 6 -> 0 */
@@ -719,6 +725,7 @@ void APNGOpt::optim_image(std::vector<APNGFrame> &frames, unsigned int &coltype,
 
         pixels[i] = raw_rgba_pixels;
         images[i] = image;
+        process_callback(0.3 + i / float(size) * 0.1);
     }
 
     liq_result *res;
@@ -741,6 +748,8 @@ void APNGOpt::optim_image(std::vector<APNGFrame> &frames, unsigned int &coltype,
             trns[i] = liqPalette->entries[i].a;
             if (trns[i] != 255)
                 trnssize = i + 1;
+            
+            process_callback(0.4 + i / float(size) * 0.1);
         }
     }
 
@@ -1332,11 +1341,11 @@ size_t APNGOpt::save_apng(long & buffer_ptr, std::vector<APNGFrame> &frames, uns
         deflate_rect_op(frames[0].p, x0, y0, w0, h0, bpp, rowbytes, zbuf_size, 0);
         deflate_rect_fin(deflate_method, iter, zbuf, &zsize, bpp, rowbytes, rows, zbuf_size, 0);
 
-        printf("saving (frame %d of %d)\n", 1 - first, num_frames - first);
+        process_callback(0.5 + ((1 - first) / float(num_frames - first)) * 0.5);
         if (first)
         {
             write_IDATs(f, 0, zbuf, zsize, idat_size);
-            printf("saving (frame %d of %d)\n",  1, num_frames-first);
+            process_callback(0.5 + ((1) / float(num_frames - first)) * 0.5);
             for (j = 0; j < 6; j++)
                 op[j].valid = 0;
             deflate_rect_op(frames[1].p, x0, y0, w0, h0, bpp, rowbytes, zbuf_size, 0);
@@ -1347,8 +1356,7 @@ size_t APNGOpt::save_apng(long & buffer_ptr, std::vector<APNGFrame> &frames, uns
         {
             unsigned int op_min;
             int op_best;
-
-            printf("saving (frame %d of %d)\n", i-first+2, num_frames-first);
+            process_callback(0.5 + ((i - first + 2) / float(num_frames - first)) * 0.5);
             for (j = 0; j < 6; j++)
                 op[j].valid = 0;
 

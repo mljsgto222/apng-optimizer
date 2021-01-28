@@ -1004,9 +1004,9 @@ function updateGlobalBufferAndViews(buf) {
   Module['HEAPF64'] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_BASE = 5281664,
+var STACK_BASE = 5280448,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 38784;
+    STACK_MAX = 37568;
 
 var TOTAL_STACK = 5242880;
 
@@ -2494,7 +2494,6 @@ var ASM_CONSTS = {
       });
     }
 
-
   function _abort() {
       abort();
     }
@@ -2682,7 +2681,6 @@ var asmLibraryArg = {
   "_embind_register_value_object": __embind_register_value_object,
   "_embind_register_value_object_field": __embind_register_value_object_field,
   "_embind_register_void": __embind_register_void,
-  "_emval_decref": __emval_decref,
   "abort": _abort,
   "emscripten_longjmp": _emscripten_longjmp,
   "emscripten_memcpy_big": _emscripten_memcpy_big,
@@ -2849,7 +2847,8 @@ function invoke_vi(index,a1) {
 
 // === Auto-generated postamble setup entry stuff ===
 
-
+Module["addFunction"] = addFunction;
+Module["removeFunction"] = removeFunction;
 
 var calledRun;
 
