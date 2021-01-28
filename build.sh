@@ -2,7 +2,7 @@
 
 set -e
 
-export OPTIMIZE="-O0 -pedantic"
+export OPTIMIZE="-O3 -pedantic"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
@@ -17,7 +17,7 @@ echo "============================================="
   --bind \
   ${OPTIMIZE} \
   -flto \
-  --closure=0 \
+  --closure=1 \
   -s WASM=1 \
   -s ASSERTIONS=0 \
   -s ALLOW_MEMORY_GROWTH=1 \

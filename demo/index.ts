@@ -12,6 +12,7 @@ const optImage = document.getElementById('optImage') as HTMLImageElement;
 const optSize = document.getElementById('optSize')!;
 const optTime = document.getElementById('optTime')!;
 const optRate = document.getElementById('optRate')!;
+const progressDiv = document.getElementById('progressDiv')!;
 
 async function readOriginImage(url: string) {
     originImage.src = url;
@@ -35,7 +36,13 @@ optimizer.checkReady()
         const buffer = await readOriginImage(defaultImage);
 
         const now = Date.now();
-        const optAPNG = await optimizer.optAPNG(new Uint8Array(buffer));
+        const optAPNG = await optimizer.optAPNG(new Uint8Array(buffer), {
+            minQuality: 50,
+            maxQuality: 80,
+            processCallback: (progress: number) => {
+                console.log(Math.round(progress * 100));
+            }
+        });
         optRate.innerText = `压缩率: ${Math.round((1 - optAPNG.byteLength / buffer.byteLength) * 1000) / 10}%`;
         optTime.innerText = `耗时: ${Date.now() - now}ms`
         setOptImage(optAPNG);
