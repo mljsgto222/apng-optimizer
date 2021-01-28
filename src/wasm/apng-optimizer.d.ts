@@ -4,62 +4,16 @@ export interface Options {
     iter: number;
     min_quality: number;
     max_quality: number;
-    disabled_quant: boolean;
+    disabled_quant: boolean
 }
 
-export interface ReadFileOptions {
-    // 文件编码格式
-    encoding?: 'utf8' | 'binary';
-    // 标识
-    flags?:  'r' | 'r+' | 'wx' | 'w' | 'rw' | 'wx+'| 'w+' | 'a' | 'ax' | 'a+' | 'ax+';
-}
-
-export interface WriteFileOptions {
-    flags?: 'r' | 'r+' | 'wx' | 'w' | 'rw' | 'wx+'| 'w+' | 'a' | 'ax' | 'a+' | 'ax+';
-}
-
-class FileSystem {
-    /**
-     * 创建文件目录
-     * @param path - 目录地址
-     */
-    mkdir(path: string): void;
-
-    /**
-     * 创建文件
-     * @param parent - 路径
-     * @param name - 文件名
-     * @param canRead - 是否可读
-     * @param canWrite - 是否可写
-     */
-    createPath(parent: string, name: string, canRead: boolean, canWrite: boolean): void;
-
-    /**
-     * 将数据写入文件
-     * @param filePath - 文件路径
-     * @param text - 数据
-     */
-    writeFile(filePath: string, text: string | ArrayBuffer, opts?: WriteFileOptions): void;
-
-    /**
-     * 删除文件
-     * @param filePath - 文件路径
-     */
-    unlink(filePath: string): void;
-
-    /**
-     * 读取文件内容
-     * @param filePath - 文件路径
-     * @param options
-     * @param options.encoding - 编码方式
-     * @param options.flags - 读取标识
-     */
-    readFile(filePath: string, options: ReadFileOptions = { encoding: 'utf8', flags: 'r' }): String | Uint8Array;
+export interface OptimizerResult {
+    bufferPtr: number;
+    size: number;
 }
 
 
 export class APNGOptimizerModule {
-    FS: FileSystem;
     HEAP8: Buffer;
     HEAP16: Buffer;
     HEAP32: Buffer;
@@ -81,12 +35,15 @@ export class APNGOptimizerModule {
      */
     _free(ptr: number): void;
 
+
     /**
-     * 优化 apng
-     * @param inPath - 输入 apng 文件地址
-     * @param outPath - 输出 apng 文件地址
+     * 优化 apng 文件
+     * @param pngBufferPtr - png 文件指针地址
+     * @param pngBufferSize - png 文件大小
+     * @param options - 优化参数
+     * @param callback - 进度回调
      */
-    optAPNG(inPath: string, outPath: string, options: Options): number;
+    optAPNG(pngBufferPtr: number, pngBufferSize: number, options: Options, callback: any): OptimizerResult;
 }
 
 interface IFantasyModule {

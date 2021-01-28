@@ -2,7 +2,7 @@
 
 set -e
 
-export OPTIMIZE="-O3 -pedantic"
+export OPTIMIZE="-O0 -pedantic"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
@@ -17,14 +17,12 @@ echo "============================================="
   --bind \
   ${OPTIMIZE} \
   -flto \
-  --closure=1 \
-  --post-js ./em-post.js \
+  --closure=0 \
   -s WASM=1 \
   -s ASSERTIONS=0 \
   -s ALLOW_MEMORY_GROWTH=1 \
   -s SAFE_HEAP=0 \
   -s ENVIRONMENT=web,worker \
-  -s EXTRA_EXPORTED_RUNTIME_METHODS='["FS"]' \
   -s MODULARIZE=1 \
   -s EXPORT_ES6=1 \
   -s EXPORT_NAME=${NAME} \

@@ -28,13 +28,14 @@ function setOptImage(uint8Array: Uint8Array) {
     optSize.innerText = `大小: ${Math.round(uint8Array.length / 1024 * 100000) / 100000}kb`;
 };
 
+
 const optimizer = new APNGOptimizer(assembly);
 optimizer.checkReady()
     .then(async() => {
         const buffer = await readOriginImage(defaultImage);
 
         const now = Date.now();
-        const optAPNG = await optimizer.optAPNG(buffer);
+        const optAPNG = await optimizer.optAPNG(new Uint8Array(buffer));
         optRate.innerText = `压缩率: ${Math.round((1 - optAPNG.byteLength / buffer.byteLength) * 1000) / 10}%`;
         optTime.innerText = `耗时: ${Date.now() - now}ms`
         setOptImage(optAPNG);

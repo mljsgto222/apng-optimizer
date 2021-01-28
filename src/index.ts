@@ -1,8 +1,6 @@
 import { DeflateMethod } from './enum/deflate-method';
 import Module, { APNGOptimizerModule, Options } from './wasm/apng-optimizer';
 
-const IN_FILE_PATH = '/in.png';
-const OUT_FILE_PATH = '/out.png';
 
 export interface OptimizerOptions {
     deflateMethod?: DeflateMethod;
@@ -40,24 +38,29 @@ export class APNGOptimizer {
         return this.readyPromise;
     }
 
-    async optAPNG(apngBuffer: ArrayBuffer, options?: OptimizerOptions): Promise<Uint8Array> {
+    async optAPNG(apngBuffer: Uint8Array, options?: OptimizerOptions): Promise<Uint8Array> {
+        const { module } = this;
         const _options = Object.assign({}, defaultOptions, options) as Required<OptimizerOptions>;
+        const pngBufferPtr = module._malloc(apngBuffer.byteLength);
+        module.HEAPU8.set(apngBuffer, pngBufferPtr);
 
-        this.module.FS.writeFile(IN_FILE_PATH, new Uint8Array(apngBuffer));
-        const res = this.module.optAPNG(IN_FILE_PATH, OUT_FILE_PATH, {
+        const res = this.module.optAPNG(pngBufferPtr, apngBuffer.byteLength, {
             deflate_method: _options.deflateMethod,
             iter: _options.iter,
             min_quality: _options.minQuality,
             max_quality: _options.maxQuality,
             disabled_quant: false
-        });
-        this.module.FS.unlink(IN_FILE_PATH);
-        if(res < 0) {
+        }, (d: any) => console.log(d));
+
+        module._free(pngBufferPtr);
+        if(res.size <= 0) {
             throw new Error(`opt APNG failed`);
         }
+        const optedBuffer = module.HEAPU8.subarray(res.bufferPtr, res.bufferPtr + res.size);
+        const optAPNG = new Uint8Array(optedBuffer);
+        console.log(res.bufferPtr);
+        module._free(res.bufferPtr);
 
-        const optAPNG = this.module.FS.readFile(OUT_FILE_PATH, { encoding: 'binary' }) as Uint8Array;
-        this.module.FS.unlink(OUT_FILE_PATH);
         return optAPNG;
     }
 }

@@ -28,7 +28,6 @@ private:
     /* APNG decoder - end */
 
     /* APNG encoder - begin */
-
     void write_chunk(FILE * f, const char * name, unsigned char * data, unsigned int length);
 
     void write_IDATs(FILE * f, int frame, unsigned char * data, unsigned int length, unsigned int idat_size);
@@ -46,9 +45,9 @@ public:
     APNGOpt(/* args */);
     ~APNGOpt();
 
-    int load_apng(const char * szIn, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops);
+    int load_apng(void * buffer, long size, std::vector<APNGFrame>& frames, unsigned int & first, unsigned int & loops);
 
-    int save_apng(const char * szOut, std::vector<APNGFrame>& frames, unsigned int first, unsigned int loops, unsigned int coltype, int deflate_method, int iter);
+    size_t save_apng(long & buffer_ptr, std::vector<APNGFrame>& frames, unsigned int first, unsigned int loops, unsigned int coltype, int deflate_method, int iter);
 
     void optim_dirty(std::vector<APNGFrame>& frames);
 

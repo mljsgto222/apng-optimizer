@@ -16,14 +16,20 @@ struct Options {
     bool disabled_quant = false;
 };
 
+struct OptimizerResult {
+    long bufferPtr;
+    long size;
+};
+
 int main() { }
 
-int optAPNG(std::string szInput, std::string szOut, Options options) {
+OptimizerResult optAPNG(long pngBufferPtr, long size, Options options, emscripten::val callback) {
     unsigned int first, loops, coltype;
     std::shared_ptr<APNGOpt> apngOpt = std::make_shared<APNGOpt>();
     std::vector<APNGFrame> frames;
+    OptimizerResult result = OptimizerResult({ 0, 0 });
 
-    int res = apngOpt->load_apng(szInput.c_str(), frames, first, loops);
+    int res = apngOpt->load_apng(reinterpret_cast<void *>(pngBufferPtr), size, frames, first, loops);
     if (res >= 0)
     {
         apngOpt->optim_dirty(frames);
@@ -35,7 +41,9 @@ int optAPNG(std::string szInput, std::string szOut, Options options) {
             apngOpt->optim_downconvert(frames, coltype);
         }
 
-        apngOpt->save_apng(szOut.c_str(), frames, first, loops, coltype, options.deflate_method, options.iter);
+        long bufferPtr;
+        result.size = (long) apngOpt->save_apng(bufferPtr, frames, first, loops, coltype, options.deflate_method, options.iter);
+        result.bufferPtr = bufferPtr;
     }
 
     for (size_t j = 0; j < frames.size(); j++)
@@ -45,7 +53,7 @@ int optAPNG(std::string szInput, std::string szOut, Options options) {
     }
     frames.clear();
 
-    return res;
+    return result;
 }
 
 
@@ -56,6 +64,11 @@ EMSCRIPTEN_BINDINGS(apng_optimizer_module) {
         .field("min_quality", &Options::min_quality)
         .field("max_quality", &Options::max_quality)
         .field("disabled_quant", &Options::disabled_quant)
+        ;
+    
+    value_object<OptimizerResult>("OptimizerResult")
+        .field("bufferPtr", &OptimizerResult::bufferPtr)
+        .field("size", &OptimizerResult::size)
         ;
 
 

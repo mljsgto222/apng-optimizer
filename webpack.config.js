@@ -11,7 +11,7 @@ const config = {
         }, {
             test: /\.wasm$/,
             use: [{
-                loader: 'url-loader'
+                loader: 'file-loader'
             }]
         }]
     },
