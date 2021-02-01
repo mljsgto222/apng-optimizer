@@ -749,7 +749,7 @@ void APNGOpt::optim_image(std::vector<APNGFrame> &frames, unsigned int &coltype,
             if (trns[i] != 255)
                 trnssize = i + 1;
             
-            process_callback(0.4 + i / float(size) * 0.1);
+            process_callback(0.4 + i / float(palsize) * 0.1);
         }
     }
 

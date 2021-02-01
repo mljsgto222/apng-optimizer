@@ -1,5 +1,5 @@
 import { DeflateMethod } from './enum/deflate-method';
-import Module, { APNGOptimizerModule, Options } from './wasm/apng-optimizer';
+import Module, { APNGOptimizerModule } from './wasm/apng-optimizer';
 
 
 export interface OptimizerOptions {
@@ -30,7 +30,7 @@ export class APNGOptimizer {
     private readyPromise: Promise<APNGOptimizerModule>;
     private module!: APNGOptimizerModule;
 
-    constructor(modulePath: string) {
+    private constructor(modulePath: string) {
         this.modulePath = modulePath;
         this.readyPromise = Module({
             locateFile: () => {
@@ -41,6 +41,12 @@ export class APNGOptimizer {
                 this.module = module;
                 return module;
             });
+    }
+
+    static async createOptimizer(modulePath: string): Promise<APNGOptimizer> {
+        const optimizer = new APNGOptimizer(modulePath);
+        await optimizer.checkReady();
+        return optimizer;
     }
 
     /**

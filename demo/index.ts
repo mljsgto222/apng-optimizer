@@ -13,6 +13,7 @@ const optImage = document.getElementById('optImage') as HTMLImageElement;
 const optSize = document.getElementById('optSize')!;
 const optTime = document.getElementById('optTime')!;
 const optRate = document.getElementById('optRate')!;
+const changeImageInput = document.getElementById('changeImage')! as HTMLInputElement;
 
 async function readOriginImage(url: string) {
     originImage.src = url;
@@ -30,15 +31,15 @@ function setOptImage(uint8Array: Uint8Array) {
 };
 
 
-const optimizer = new APNGOptimizer(assembly);
-optimizer.checkReady()
-    .then(async() => {
+APNGOptimizer.createOptimizer(assembly)
+    .then(async(optimizer) => {
+        console.log('createOptimizer')
         const buffer = await readOriginImage(defaultImage);
 
         const now = Date.now();
         const optAPNG = await optimizer.optAPNG(new Uint8Array(buffer), {
             minQuality: 50,
-            maxQuality: 80,
+            maxQuality: 100,
             processCallback: (progress: number) => {
                 console.log(Math.round(progress * 100));
             }
@@ -46,4 +47,24 @@ optimizer.checkReady()
         optRate.innerText = `压缩率: ${Math.round((1 - optAPNG.byteLength / buffer.byteLength) * 1000) / 10}%`;
         optTime.innerText = `耗时: ${Date.now() - now}ms`
         setOptImage(optAPNG);
+
+        // changeImageInput.addEventListener('change', async (v: Event) => {
+        //     const files = changeImageInput.files;
+        //     if(files.length > 0) {
+        //         const file = files[0];
+        //         const originUrl = URL.createObjectURL(file);
+        //         const buffer = await readOriginImage(originUrl);
+        //         const now = Date.now();
+        //         const optAPNG = await optimizer.optAPNG(new Uint8Array(buffer), {
+        //             minQuality: 50,
+        //             maxQuality: 100,
+        //             processCallback: (progress: number) => {
+        //                 console.log(Math.round(progress * 100));
+        //             }
+        //         });
+        //         optRate.innerText = `压缩率: ${Math.round((1 - optAPNG.byteLength / buffer.byteLength) * 1000) / 10}%`;
+        //         optTime.innerText = `耗时: ${Date.now() - now}ms`
+        //         setOptImage(optAPNG);
+        //     }
+        // });
     })
