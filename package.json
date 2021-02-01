@@ -17,7 +17,7 @@
     "files": [
         "CHANGELOG.md",
         "README.md",
-        "lib"
+        "dist"
     ],
     "author": "zhengz",
     "license": "ISC",
