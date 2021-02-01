@@ -65,7 +65,7 @@ export class APNGOptimizer {
      * @param apngBuffer - apng image buffer
      * @param options - optimized options
      */
-    async optAPNG(apngBuffer: Uint8Array, options?: OptimizerOptions): Promise<Uint8Array> {
+    optAPNG(apngBuffer: Uint8Array, options?: OptimizerOptions): Uint8Array {
         const { module } = this;
         const _options = Object.assign({}, defaultOptions, options) as Required<OptimizerOptions>;
         const pngBufferPtr = module._malloc(apngBuffer.byteLength);

@@ -58,7 +58,7 @@ APNGOptimizer.createOptimizer(assemblyPath)
 
 通过加载 `modulePath` 路径上的 WebAssembly 来创建一个新的压缩器实例
 
-### APNGOptimizer.#optAPNG(apngBuffer: Uint8Array, options?: OptimizerOptions): Promise<Uint8Array> 
+### APNGOptimizer.#optAPNG(apngBuffer: Uint8Array, options?: OptimizerOptions): Uint8Array
 
 压缩 apng 图片
 + apngBuffer: apng 图像文件的 buffer 数据

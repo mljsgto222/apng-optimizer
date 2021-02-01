@@ -36,7 +36,7 @@ APNGOptimizer.createOptimizer(assembly)
         const buffer = await readOriginImage(defaultImage);
 
         const now = Date.now();
-        const optAPNG = await optimizer.optAPNG(new Uint8Array(buffer), {
+        const optAPNG = optimizer.optAPNG(new Uint8Array(buffer), {
             minQuality: 50,
             maxQuality: 100,
             processCallback: (progress: number) => {
@@ -50,7 +50,7 @@ APNGOptimizer.createOptimizer(assembly)
         changeImageInput.addEventListener('change', async (v: Event) => {
             const files = changeImageInput.files;
             if(files.length > 0) {
-                const file = files[0];
+                const file = files[0]!;
                 const originUrl = URL.createObjectURL(file);
                 const buffer = await readOriginImage(originUrl);
                 const now = Date.now();
