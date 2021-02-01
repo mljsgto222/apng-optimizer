@@ -43,6 +43,10 @@ export class APNGOptimizer {
             });
     }
 
+    /**
+     * 创建一个新的压缩器实例
+     * @param modulePath - WebAssembly 文件路径
+     */
     static async createOptimizer(modulePath: string): Promise<APNGOptimizer> {
         const optimizer = new APNGOptimizer(modulePath);
         await optimizer.checkReady();
