@@ -82,6 +82,8 @@ int cmp_colors(const void *arg1, const void *arg2)
 
 APNGOpt::APNGOpt(void (*callback)(float))
 {
+    trnssize = 0;
+    palsize = 0;
     process_callback = callback;
 }
 
@@ -733,7 +735,6 @@ void APNGOpt::optim_image(std::vector<APNGFrame> &frames, unsigned int &coltype,
     int errorCode = liq_histogram_quantize(hist, attr, &res);
     if (errorCode == LIQ_OK)
     {
-        liq_set_dithering_level(res, 1.0);
         for (int i = 0; i < size; i++)
         {
             liq_write_remapped_image(res, images[i], frames[i].p, imageSize);
