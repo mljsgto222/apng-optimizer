@@ -2,9 +2,10 @@
 import { APNGOptimizer } from '../src/index';
 // @ts-ignore
 import assembly from '../src/wasm/apng-optimizer.wasm';
+// @ts-ignore
+import demoImage from './demo_image.png';
 
-const defaultImage = 'https://st0.dancf.com/02/material_uploader/202101110423-0308.png';
-// const defaultImage = 'https://st0.dancf.com/02/material_uploader/202012311129-c24e.png';
+const defaultImage = demoImage;
 
 const originImage = document.getElementById('originImage') as HTMLImageElement;
 const originSize = document.getElementById('originSize')!;
