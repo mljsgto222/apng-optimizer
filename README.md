@@ -32,7 +32,7 @@ module.exports = {
 
 ```js
 import { APNGOptimizer } from 'apng-optimizer';
-import assemblyPath from 'apng-optimizer/dist/wasm/apng-optimizer.wasm';
+import assemblyPath from 'apng-optimizer/dist/apng-optimizer.wasm';
 
 APNGOptimizer.createOptimizer(assemblyPath)
     .then(optimizer => {

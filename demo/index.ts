@@ -1,7 +1,7 @@
 
 import { APNGOptimizer } from '../src/index';
 // @ts-ignore
-import assembly from '../src/wasm/apng-optimizer.wasm';
+import assembly from '../src/wasm/apng-optimizer.wasm?url';
 // @ts-ignore
 import demoImage from './demo_image.png';
 
