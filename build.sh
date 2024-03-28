@@ -2,7 +2,7 @@
 
 set -e
 
-export OPTIMIZE="-O3 -pedantic"
+export OPTIMIZE="-Oz -pedantic"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
@@ -27,7 +27,8 @@ echo "============================================="
   -s EXPORT_ES6=1 \
   -s EXPORT_NAME=${NAME} \
   -s USE_ES6_IMPORT_META=0 \
-  -s EXTRA_EXPORTED_RUNTIME_METHODS='["addFunction", "removeFunction"]' \
+  -s EXPORTED_RUNTIME_METHODS='["addFunction", "removeFunction"]' \
+  -s EXPORTED_FUNCTIONS='["_malloc", "_free"]' \
   -s RESERVED_FUNCTION_POINTERS=1 \
   -I ./apngopt/7z \
   -I ./apngopt/libpng \
